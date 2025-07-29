@@ -2,35 +2,37 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Daily To Do</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
-      font-family: sans-serif;
-      background: #f5f6f8;
-      display: flex; justify-content: center; align-items: center;
-      height: 100vh;
+      font-family: 'Pretendard', sans-serif;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
     .card {
       background: white;
       border-radius: 16px;
       padding: 24px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       width: 90%;
       max-width: 400px;
     }
     .title {
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: bold;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
     .date {
       font-size: 0.95rem;
       color: #888;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
     .todo-item {
       display: flex;
@@ -47,6 +49,7 @@
       border: 2px solid #ccc;
       cursor: pointer;
       flex-shrink: 0;
+      background: white;
     }
     .checkbox input {
       opacity: 0;
@@ -68,7 +71,6 @@
       stroke-width: 2.5;
       stroke-linecap: round;
       stroke-linejoin: round;
-      background: transparent;
       pointer-events: none;
       display: none;
     }
@@ -94,6 +96,19 @@
       text-decoration: line-through;
       color: #888;
     }
+
+    .add-input {
+      width: 100%;
+      margin-top: 16px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    .add-input:focus {
+      border-color: #000cfe;
+      outline: none;
+    }
   </style>
 </head>
 <body>
@@ -101,29 +116,37 @@
     <div class="title">Daily To Do</div>
     <div class="date" id="todayDate"></div>
 
-    <div class="todo-item">
-      <label class="checkbox">
-        <input type="checkbox" onchange="toggleCheck(this)">
-        <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
-      </label>
-      <input class="editable" value="Exercise 30m" />
+    <div id="todoList">
+      <!-- 초기 항목 3개 -->
+      <div class="todo-item">
+        <label class="checkbox">
+          <input type="checkbox" onchange="toggleCheck(this)">
+          <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
+        </label>
+        <input class="editable" value="Exercise 30m" onkeydown="handleDelete(event)">
+      </div>
+      <div class="todo-item">
+        <label class="checkbox">
+          <input type="checkbox" onchange="toggleCheck(this)">
+          <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
+        </label>
+        <input class="editable" value="Practice French 15m" onkeydown="handleDelete(event)">
+      </div>
+      <div class="todo-item">
+        <label class="checkbox">
+          <input type="checkbox" onchange="toggleCheck(this)">
+          <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
+        </label>
+        <input class="editable" value="Organise & Plan" onkeydown="handleDelete(event)">
+      </div>
     </div>
 
-    <div class="todo-item">
-      <label class="checkbox">
-        <input type="checkbox" onchange="toggleCheck(this)">
-        <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
-      </label>
-      <input class="editable" value="Practice French 15m" />
-    </div>
-
-    <div class="todo-item">
-      <label class="checkbox">
-        <input type="checkbox" onchange="toggleCheck(this)">
-        <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
-      </label>
-      <input class="editable" value="Organise & Plan" />
-    </div>
+    <input
+      type="text"
+      class="add-input"
+      id="addInput"
+      placeholder="Enter new todo and press Enter"
+    />
   </div>
 
   <script>
@@ -135,6 +158,36 @@
     function toggleCheck(el) {
       const box = el.closest('.checkbox');
       box.classList.toggle('checked');
+    }
+
+    // 항목 추가
+    document.getElementById("addInput").addEventListener("keypress", function (e) {
+      if (e.key === "Enter" && this.value.trim() !== "") {
+        addTodoItem(this.value.trim());
+        this.value = "";
+      }
+    });
+
+    function addTodoItem(text) {
+      const todoList = document.getElementById("todoList");
+      const newItem = document.createElement("div");
+      newItem.className = "todo-item";
+      newItem.innerHTML = `
+        <label class="checkbox">
+          <input type="checkbox" onchange="toggleCheck(this)">
+          <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
+        </label>
+        <input class="editable" value="${text}" onkeydown="handleDelete(event)">
+      `;
+      todoList.appendChild(newItem);
+    }
+
+    // 삭제 기능 (텍스트 비어있고 백스페이스일 때)
+    function handleDelete(e) {
+      if (e.key === "Backspace" && e.target.value === "") {
+        const item = e.target.closest(".todo-item");
+        if (item) item.remove();
+      }
     }
   </script>
 </body>
