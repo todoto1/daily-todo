@@ -36,7 +36,7 @@
     }
     .todo-item {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
       margin-bottom: 16px;
     }
@@ -50,6 +50,7 @@
       cursor: pointer;
       flex-shrink: 0;
       background: white;
+      margin-top: 2px; /* textarea와 맞추기 위해 살짝 아래로 */
     }
     .checkbox input {
       opacity: 0;
@@ -85,9 +86,16 @@
     .editable {
       flex: 1;
       font-size: 1rem;
+      line-height: 1.4;
+      padding: 0;
+      margin: 0;
       border: none;
       background: transparent;
       color: #222;
+      resize: none;
+      overflow: hidden;
+      min-height: 24px;
+      font-family: 'Pretendard', sans-serif;
     }
     .editable:focus {
       outline: none;
@@ -104,6 +112,7 @@
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 1rem;
+      font-family: 'Pretendard', sans-serif;
     }
     .add-input:focus {
       border-color: #000cfe;
@@ -123,21 +132,21 @@
           <input type="checkbox" onchange="toggleCheck(this)">
           <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
         </label>
-        <input class="editable" value="Exercise 30m" onkeydown="handleDelete(event)">
+        <textarea class="editable" onkeydown="handleDelete(event)" oninput="autoResize(this)">Exercise 30m</textarea>
       </div>
       <div class="todo-item">
         <label class="checkbox">
           <input type="checkbox" onchange="toggleCheck(this)">
           <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
         </label>
-        <input class="editable" value="Practice French 15m" onkeydown="handleDelete(event)">
+        <textarea class="editable" onkeydown="handleDelete(event)" oninput="autoResize(this)">Practice French 15m</textarea>
       </div>
       <div class="todo-item">
         <label class="checkbox">
           <input type="checkbox" onchange="toggleCheck(this)">
           <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
         </label>
-        <input class="editable" value="Organise & Plan" onkeydown="handleDelete(event)">
+        <textarea class="editable" onkeydown="handleDelete(event)" oninput="autoResize(this)">Organise & Plan</textarea>
       </div>
     </div>
 
@@ -160,6 +169,12 @@
       box.classList.toggle('checked');
     }
 
+    // 자동 크기 조정 함수
+    function autoResize(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
     // 항목 추가
     document.getElementById("addInput").addEventListener("keypress", function (e) {
       if (e.key === "Enter" && this.value.trim() !== "") {
@@ -177,18 +192,32 @@
           <input type="checkbox" onchange="toggleCheck(this)">
           <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
         </label>
-        <input class="editable" value="${text}" onkeydown="handleDelete(event)">
+        <textarea class="editable" onkeydown="handleDelete(event)" oninput="autoResize(this)">${text}</textarea>
       `;
       todoList.appendChild(newItem);
+      
+      // 새로 추가된 textarea의 높이 조정
+      const newTextarea = newItem.querySelector('.editable');
+      autoResize(newTextarea);
     }
 
     // 삭제 기능 (텍스트 비어있고 백스페이스일 때)
     function handleDelete(e) {
-      if (e.key === "Backspace" && e.target.value === "") {
+      if (e.key === "Backspace" && e.target.value.trim() === "") {
         const item = e.target.closest(".todo-item");
         if (item) item.remove();
       }
     }
+
+    // 페이지 로드 시 기존 textarea들의 높이 조정
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.editable').forEach(autoResize);
+    });
+
+    // 초기 높이 조정
+    setTimeout(() => {
+      document.querySelectorAll('.editable').forEach(autoResize);
+    }, 100);
   </script>
 </body>
 </html>
