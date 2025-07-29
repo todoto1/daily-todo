@@ -19,7 +19,7 @@
     .card {
       background: white;
       border-radius: 16px;
-      padding: 24px;
+      padding: 24px 24px 20px 24px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       width: 90%;
       max-width: 400px;
@@ -37,8 +37,8 @@
     .todo-item {
       display: flex;
       align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-bottom: 6px;
     }
 
     .checkbox {
@@ -50,7 +50,7 @@
       cursor: pointer;
       flex-shrink: 0;
       background: white;
-      margin-top: 2px; /* textarea와 맞추기 위해 살짝 아래로 */
+      margin-top: 1px;
     }
     .checkbox input {
       opacity: 0;
@@ -132,30 +132,25 @@
           <input type="checkbox" onchange="toggleCheck(this)">
           <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
         </label>
-        <textarea class="editable" onkeydown="handleDelete(event)" oninput="autoResize(this)">Exercise 30m</textarea>
+        <textarea class="editable" onkeydown="handleKeydown(event)" oninput="autoResize(this)">Exercise 30m</textarea>
       </div>
       <div class="todo-item">
         <label class="checkbox">
           <input type="checkbox" onchange="toggleCheck(this)">
           <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
         </label>
-        <textarea class="editable" onkeydown="handleDelete(event)" oninput="autoResize(this)">Practice French 15m</textarea>
+        <textarea class="editable" onkeydown="handleKeydown(event)" oninput="autoResize(this)">Practice French 15m</textarea>
       </div>
       <div class="todo-item">
         <label class="checkbox">
           <input type="checkbox" onchange="toggleCheck(this)">
           <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
         </label>
-        <textarea class="editable" onkeydown="handleDelete(event)" oninput="autoResize(this)">Organise & Plan</textarea>
+        <textarea class="editable" onkeydown="handleKeydown(event)" oninput="autoResize(this)">Organise & Plan</textarea>
       </div>
     </div>
 
-    <input
-      type="text"
-      class="add-input"
-      id="addInput"
-      placeholder="Enter new todo and press Enter"
-    />
+
   </div>
 
   <script>
@@ -175,15 +170,8 @@
       textarea.style.height = textarea.scrollHeight + 'px';
     }
 
-    // 항목 추가
-    document.getElementById("addInput").addEventListener("keypress", function (e) {
-      if (e.key === "Enter" && this.value.trim() !== "") {
-        addTodoItem(this.value.trim());
-        this.value = "";
-      }
-    });
-
-    function addTodoItem(text) {
+    // 새 항목 추가 함수
+    function addTodoItem(text, focusNew = false) {
       const todoList = document.getElementById("todoList");
       const newItem = document.createElement("div");
       newItem.className = "todo-item";
@@ -192,20 +180,50 @@
           <input type="checkbox" onchange="toggleCheck(this)">
           <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
         </label>
-        <textarea class="editable" onkeydown="handleDelete(event)" oninput="autoResize(this)">${text}</textarea>
+        <textarea class="editable" onkeydown="handleKeydown(event)" oninput="autoResize(this)">${text}</textarea>
       `;
       todoList.appendChild(newItem);
       
       // 새로 추가된 textarea의 높이 조정
       const newTextarea = newItem.querySelector('.editable');
       autoResize(newTextarea);
+      
+      // 새 항목에 포커스
+      if (focusNew) {
+        newTextarea.focus();
+        newTextarea.setSelectionRange(0, 0); // 커서를 맨 앞으로
+      }
     }
 
-    // 삭제 기능 (텍스트 비어있고 백스페이스일 때)
-    function handleDelete(e) {
-      if (e.key === "Backspace" && e.target.value.trim() === "") {
-        const item = e.target.closest(".todo-item");
-        if (item) item.remove();
+    // 키보드 이벤트 처리
+    function handleKeydown(e) {
+      const textarea = e.target;
+      const cursorPos = textarea.selectionStart;
+      const textLength = textarea.value.length;
+      
+      if (e.key === "Enter") {
+        // 텍스트 끝에서 엔터를 누르면 새 항목 생성
+        if (cursorPos === textLength) {
+          e.preventDefault();
+          addTodoItem("", true);
+        }
+      } else if (e.key === "Backspace") {
+        // 텍스트가 비어있고 백스페이스를 누르면 항목 삭제
+        if (textarea.value.trim() === "") {
+          e.preventDefault();
+          const item = textarea.closest(".todo-item");
+          const prevItem = item.previousElementSibling;
+          
+          if (item && item.parentNode.children.length > 1) { // 최소 1개는 남겨둠
+            item.remove();
+            // 이전 항목의 textarea에 포커스
+            if (prevItem) {
+              const prevTextarea = prevItem.querySelector('.editable');
+              prevTextarea.focus();
+              prevTextarea.setSelectionRange(prevTextarea.value.length, prevTextarea.value.length);
+            }
+          }
+        }
       }
     }
 
