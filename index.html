@@ -125,32 +125,7 @@
     <div class="title">Daily To Do</div>
     <div class="date" id="todayDate"></div>
 
-    <div id="todoList">
-      <!-- 초기 항목 3개 -->
-      <div class="todo-item">
-        <label class="checkbox">
-          <input type="checkbox" onchange="toggleCheck(this)">
-          <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
-        </label>
-        <textarea class="editable" onkeydown="handleKeydown(event)" oninput="autoResize(this)">Exercise 30m</textarea>
-      </div>
-      <div class="todo-item">
-        <label class="checkbox">
-          <input type="checkbox" onchange="toggleCheck(this)">
-          <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
-        </label>
-        <textarea class="editable" onkeydown="handleKeydown(event)" oninput="autoResize(this)">Practice French 15m</textarea>
-      </div>
-      <div class="todo-item">
-        <label class="checkbox">
-          <input type="checkbox" onchange="toggleCheck(this)">
-          <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
-        </label>
-        <textarea class="editable" onkeydown="handleKeydown(event)" oninput="autoResize(this)">Organise & Plan</textarea>
-      </div>
-    </div>
-
-
+    <div id="todoList"></div>
   </div>
 
   <script>
@@ -162,80 +137,92 @@
     function toggleCheck(el) {
       const box = el.closest('.checkbox');
       box.classList.toggle('checked');
+      saveTodos();
     }
 
-    // 자동 크기 조정 함수
     function autoResize(textarea) {
       textarea.style.height = 'auto';
       textarea.style.height = textarea.scrollHeight + 'px';
     }
 
-    // 새 항목 추가 함수
-    function addTodoItem(text, focusNew = false) {
+    function addTodoItem(text, checked = false, focusNew = false) {
       const todoList = document.getElementById("todoList");
       const newItem = document.createElement("div");
       newItem.className = "todo-item";
       newItem.innerHTML = `
-        <label class="checkbox">
+        <label class="checkbox ${checked ? 'checked' : ''}">
           <input type="checkbox" onchange="toggleCheck(this)">
           <svg viewBox="0 0 24 24"><polyline points="5 13 10 17 19 6"/></svg>
         </label>
         <textarea class="editable" onkeydown="handleKeydown(event)" oninput="autoResize(this)">${text}</textarea>
       `;
       todoList.appendChild(newItem);
-      
-      // 새로 추가된 textarea의 높이 조정
-      const newTextarea = newItem.querySelector('.editable');
-      autoResize(newTextarea);
-      
-      // 새 항목에 포커스
+
+      const textarea = newItem.querySelector('.editable');
+      textarea.addEventListener('input', saveTodos);
+      autoResize(textarea);
+
       if (focusNew) {
-        newTextarea.focus();
-        newTextarea.setSelectionRange(0, 0); // 커서를 맨 앞으로
+        textarea.focus();
+        textarea.setSelectionRange(0, 0);
       }
     }
 
-    // 키보드 이벤트 처리
     function handleKeydown(e) {
       const textarea = e.target;
       const cursorPos = textarea.selectionStart;
       const textLength = textarea.value.length;
-      
+
       if (e.key === "Enter") {
-        // 텍스트 끝에서 엔터를 누르면 새 항목 생성
         if (cursorPos === textLength) {
           e.preventDefault();
-          addTodoItem("", true);
+          addTodoItem("", false, true);
+          saveTodos();
         }
       } else if (e.key === "Backspace") {
-        // 텍스트가 비어있고 백스페이스를 누르면 항목 삭제
         if (textarea.value.trim() === "") {
           e.preventDefault();
           const item = textarea.closest(".todo-item");
           const prevItem = item.previousElementSibling;
-          
-          if (item && item.parentNode.children.length > 1) { // 최소 1개는 남겨둠
+          if (item && item.parentNode.children.length > 1) {
             item.remove();
-            // 이전 항목의 textarea에 포커스
             if (prevItem) {
               const prevTextarea = prevItem.querySelector('.editable');
               prevTextarea.focus();
               prevTextarea.setSelectionRange(prevTextarea.value.length, prevTextarea.value.length);
             }
+            saveTodos();
           }
         }
       }
     }
 
-    // 페이지 로드 시 기존 textarea들의 높이 조정
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('.editable').forEach(autoResize);
-    });
+    function saveTodos() {
+      const items = [];
+      document.querySelectorAll('.todo-item').forEach(item => {
+        items.push({
+          text: item.querySelector('.editable').value,
+          checked: item.querySelector('.checkbox').classList.contains('checked')
+        });
+      });
+      localStorage.setItem('todos', JSON.stringify(items));
+    }
 
-    // 초기 높이 조정
-    setTimeout(() => {
-      document.querySelectorAll('.editable').forEach(autoResize);
-    }, 100);
+    function loadTodos() {
+      const saved = JSON.parse(localStorage.getItem('todos') || '[]');
+      if (saved.length === 0) {
+        // 기본 항목 제공
+        addTodoItem("Exercise 30m");
+        addTodoItem("Practice French 15m");
+        addTodoItem("Organise & Plan");
+      } else {
+        saved.forEach(item => addTodoItem(item.text, item.checked));
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTodos();
+    });
   </script>
 </body>
 </html>
